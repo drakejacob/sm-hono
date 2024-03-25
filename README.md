@@ -1,11 +1,9 @@
-To install dependencies:
+First install all dependencies with:
 ```sh
-bun install
+bun i
 ```
 
-To run:
+And the run the development server with:
 ```sh
-bun run dev
+bun dev
 ```
-
-open http://localhost:3000

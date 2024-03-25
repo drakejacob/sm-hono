@@ -2,8 +2,10 @@ import { FC } from "hono/jsx"
 
 export const Base: FC = (props) => {
 	return (
-		<html>
+		//<!-- Developed by Jacob "Drake" Bengtsson 2024 -->
+		<html lang="en">
 			<head>
+				<link rel="stylesheet" href="/reset.css" />
 				<link rel="stylesheet" href="/uno.css" />
 				<script src="/htmx.min.js"></script>
 				<title>Big webpage</title>

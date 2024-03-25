@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import { Base } from "./layouts/Base"
 import { serveStatic } from "hono/bun"
 import { speakers } from "./pages/speakers"
+import { jsxRenderer } from "hono/jsx-renderer"
 
 const app = new Hono()
 
