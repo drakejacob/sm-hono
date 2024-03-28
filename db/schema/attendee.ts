@@ -1,11 +1,10 @@
 import { sql } from "drizzle-orm"
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
-import { idFunction } from ".."
 
 export const attendees = sqliteTable("attendees", {
 	id: text("id")
 		.primaryKey()
-		.default(sql`${idFunction}`),
+		.default(sql`(hex(randomblob(8)))`),
 	firstName: text("firstName").notNull(),
 	nickName: text("nickName").notNull(),
 	lastName: text("lastName").notNull(),
@@ -19,5 +18,3 @@ export const attendees = sqliteTable("attendees", {
 		.default(sql`(unixepoch())`),
 	leftAt: integer("leftAt", { mode: "timestamp" })
 })
-
-export const Attendee = attendees.$inferSelect

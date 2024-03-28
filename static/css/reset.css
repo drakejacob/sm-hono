@@ -1,11 +1,14 @@
-*, ::before, ::after {
+*,
+::before,
+::after {
 	box-sizing: border-box;
 	word-break: break-word;
 	margin: 0;
 	padding: 0;
 }
 
-ol, ul {
+ol,
+ul {
 	list-style: none;
 }
 
@@ -18,9 +21,14 @@ img {
 	object-fit: cover;
 }
 
-button, input, textarea {
+button,
+input,
+textarea {
 	border: none;
 	outline: none;
+	font-family: inherit;
+	background: none;
+	color: inherit;
 }
 
 button {

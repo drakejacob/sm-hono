@@ -1,68 +1,75 @@
 import { Hono } from "hono"
 import { Base } from "../../layouts/Base"
-import { Header } from "../../components/Header"
-import { db } from "../../../db"
+import { Header, HeaderList } from "../../components/Header"
+import { db, schema } from "../../../db"
+import { eq, asc } from "drizzle-orm"
+import { Variables } from "hono/types"
+import { jsxRenderer, useRequestContext } from "hono/jsx-renderer"
+import { SpeakersList } from "./SpeakersList"
 
-export const speakers = new Hono()
+export const speakers = new Hono<{ Variables: Variables }>()
 
-speakers.get("/", (c) => {
+speakers.get("/:id", async (c) => {
+	const id = c.req.param("id")
 
-	db.query.speakerslistAttendees.findMany({
-		where: {
-			attendeeId: "me"
-		}
-	}).then((attendees) => {
-		const imOnTheList = attendees.length > 0
-	
-	})
+	/*const attendee = await db.query.attendees.findFirst({
+		where: eq(schema.attendees.id, id)
+	})*/
 
-	return c.html(
-		<Base>
-			<Header></Header>
-			<div>this is speakers</div>
-			<div class="grid w-fit grid-cols-[2fr_3fr]">
-				<div class="col-span-2">
-					Currently speaking
-					<p class="text-[40px] font-bold">
-						{speakersList.new[0] ? getNameFromUser(speakersList.new[0]) : ""}
-					</p>
-				</div>
+	const attendee = await db
+		.select()
+		.from(schema.attendees)
+		.where(eq(schema.attendees.id, id))
+		.get()
 
-				<div>
-					{#each speakersList.new.slice(1).map(getNameFromUser) as newSpeaker}
-						<p>{newSpeaker}</p>
-					{/each}
-				</div>
+	if (!attendee) {
+		return c.render(<div>Attendee with id {id} not found</div>)
+	}
 
-				<div class="pl-4 pt-4 font-bold">
-					Returning speakers
-					{#each speakersList.returning.map(getNameFromUser) as returningSpeaker}
-						<p class="font-normal text-slate-400">{returningSpeaker}</p>
-					{/each}
-				</div>
-
-				<div class="flex justify-center col-span-2 mt-4">
-					<button
-						on:click={() => {
-						if (imOnTheList) {
-							eden.speakers["remove-me"].post()
-						} else {
-							eden.speakers["add-me"].post()
-						}
-						}}
-					>
-						{#if imOnTheList}
-						Remove me!
-						{:else}
-						Add me!
-						{/if}
-					</button>
-				</div>
-			</div>
-		</Base>
+	return c.render(
+		<div>
+			This is the data for attendee with id {id}
+			<p>First name: {attendee.firstName}</p>
+			<p>Nickname: {attendee.nickName}</p>
+			<p>Nickname: {attendee.lastName}</p>
+		</div>
 	)
 })
 
-speakers.get("/list", (c) => {
+speakers.use(
+	"*",
+	jsxRenderer(({ children, Layout }) => {
+		const c = useRequestContext()
+		return (
+			<Layout>
+				<div
+					class="transition-margin absolute right-0 flex h-screen w-full flex-col"
+					x-data="{ navOpen: false }"
+					x-bind:class="navOpen ? 'mr-50' : ''"
+				>
+					<Header urlPath={c.req.path}></Header>
+					<main class="flex flex-1 flex-col items-center bg-white p-6">
+						{children}
+					</main>
+				</div>
+				<HeaderList></HeaderList>
+			</Layout>
+		)
+	})
+)
 
+speakers.get("/", (c) => {
+	return c.render(<SpeakersList></SpeakersList>)
+})
+
+speakers.get("/list", (c) => {
+	return c.html(<SpeakersList></SpeakersList>)
+})
+
+speakers.get("/listsse", (c) => {
+	return c.render(<div>Listsse</div>)
+})
+
+speakers.get("advance", (c) => {
+	return c.render(<div>Advance</div>)
 })
