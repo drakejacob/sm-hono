@@ -7,8 +7,9 @@ import { verify } from "hono/jwt"
 import { getCookie } from "hono/cookie"
 import { randomBytes } from "crypto"
 import { jsxRenderer } from "hono/jsx-renderer"
+import { admin } from "./pages/admin"
 
-const JWT_KEY = randomBytes(64).toString("hex")
+export var JWT_KEY = randomBytes(64).toString("hex")
 
 export type Variables = {
 	attendeeId: string
@@ -47,6 +48,7 @@ app.get("/", (c) => {
 })
 
 app.route("/speakers", speakers)
+app.route("/admin", admin)
 
 app.use("/*", serveStatic({ root: "./static" }))
 
