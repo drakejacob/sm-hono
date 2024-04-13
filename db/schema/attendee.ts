@@ -9,10 +9,12 @@ export const attendees = sqliteTable("attendees", {
 	nickName: text("nickName").notNull(),
 	lastName: text("lastName").notNull(),
 	yearAdmitted: integer("yearAdmitted"),
-	isMember: integer("isMember", { mode: "boolean" }).default(false),
+	isMember: integer("isMember", { mode: "boolean" }).notNull().default(false),
 	attendedOnlyMaster: integer("attendedOnlyMaster", {
 		mode: "boolean"
-	}).default(false),
+	})
+		.notNull()
+		.default(false),
 	joinedAt: integer("joinedAt", { mode: "timestamp" })
 		.notNull()
 		.default(sql`(unixepoch())`),

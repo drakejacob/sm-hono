@@ -10,11 +10,11 @@ const DATABASE_FILE_URL = "./sqlite/db.sqlite"
 
 const sqlite = new Database(DATABASE_FILE_URL)
 export const schema = { ...attendee, ...speakerslist }
-export const db = drizzle(sqlite, { schema, logger: true })
+export const db = drizzle(sqlite, { schema, logger: false })
 
 console.log("ENV", env.ENV)
 
-if (env.ENV === "dev") {
-	console.log("Seeding database file")
+if (env.ENV?.toLowerCase() === "dev") {
+	console.log("Environment is dev, seeding database file")
 	seedDatabase()
 }

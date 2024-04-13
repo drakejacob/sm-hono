@@ -4,7 +4,10 @@ const config = {
 	useTabs: true,
 	semi: false,
 	trailingComma: "none",
-	plugins: ["prettier-plugin-tailwindcss"]
+	plugins: [
+		"@trivago/prettier-plugin-sort-imports",
+		"prettier-plugin-tailwindcss"
+	]
 }
 
 export default config

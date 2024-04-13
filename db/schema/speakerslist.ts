@@ -6,7 +6,11 @@ export const speakerslist = sqliteTable("speakerslist", {
 	id: text("id")
 		.primaryKey()
 		.default(sql`(hex(randomblob(8)))`),
-	name: text("name").notNull()
+	name: text("name").notNull(),
+	openedAt: integer("openedAt", { mode: "timestamp" })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	closedAt: integer("closedAt", { mode: "timestamp" })
 })
 
 export const speakerslistAttendees = sqliteTable("speakerslistAttendees", {
@@ -16,8 +20,15 @@ export const speakerslistAttendees = sqliteTable("speakerslistAttendees", {
 	attendeeId: text("attendeeId")
 		.notNull()
 		.references(() => attendees.id),
-	joinedAt: integer("joinedAt", { mode: "timestamp" }).notNull(),
-	leftAt: integer("leftAt", { mode: "timestamp" })
+	joinedAt: integer("joinedAt", { mode: "timestamp" })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	leftAt: integer("leftAt", { mode: "timestamp" }),
+	startedSpeakingAt: integer("startedSpeakingAt", { mode: "timestamp" }),
+	finishedSpeakingAt: integer("finishedSpeakingAt", { mode: "timestamp" }),
+	isCurrentlySpeaking: integer("isCurrentlySpeaking", { mode: "boolean" })
+		.notNull()
+		.default(false)
 })
 
 export const speakerslistAttendeesRelations = relations(

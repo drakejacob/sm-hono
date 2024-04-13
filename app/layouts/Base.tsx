@@ -1,5 +1,4 @@
 import { FC } from "hono/jsx"
-import { Main } from "./Main"
 
 export const Base: FC = (props) => {
 	return (
@@ -14,10 +13,8 @@ export const Base: FC = (props) => {
 				<script src="/alpine.min.js" defer></script>
 				<title>Big webpage</title>
 			</head>
-			<body class="font-serif">
-				<div>
-					<Main>{props.children}</Main>
-				</div>
+			<body class="bg-slate-50 font-serif text-slate-800 dark:bg-slate-950 dark:text-slate-300">
+				{props.children}
 			</body>
 		</html>
 	)

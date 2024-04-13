@@ -1,9 +1,7 @@
 import { db, schema } from "."
-import { attendees } from "./schema/attendee"
-import { speakerslist } from "./schema/speakerslist"
 
 export async function seedDatabase() {
-	await db.delete(attendees)
+	await db.delete(schema.attendees)
 
 	await db.insert(schema.attendees).values({
 		id: "IDgaba",
@@ -26,7 +24,7 @@ export async function seedDatabase() {
 		lastName: "Greta"
 	})
 
-	await db.delete(speakerslist)
+	await db.delete(schema.speakerslist)
 
 	await db.insert(schema.speakerslist).values({
 		id: "IDspeakerslist",
@@ -61,6 +59,4 @@ export async function seedDatabase() {
 		attendeeId: "IDgreta",
 		joinedAt: new Date(now.getTime() + 4000)
 	})
-
-	// console.log("result", result)
 }

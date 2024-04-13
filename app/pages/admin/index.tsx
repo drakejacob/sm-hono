@@ -1,20 +1,20 @@
 import { Hono } from "hono"
-import { setCookie, deleteCookie } from "hono/cookie"
-import { jwt, sign } from "hono/jwt"
-import { JWT_KEY, Variables } from "../.."
-import { speakersListStream } from "../speakers"
-import { db, schema } from "../../../db"
+import { setCookie, deleteCookie, getCookie } from "hono/cookie"
+import { JWT_KEY, Store } from "../.."
+import { updateSpeakersListStream } from "../speakers"
+import { db, schema } from "$db"
 import { and, asc, eq, isNull } from "drizzle-orm"
 import { env } from "bun"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { sign, verify } from "hono/jwt"
 
-export const admin = new Hono<{ Variables: Variables }>()
+console.log("ADMIN_PASSWORD", env.ADMIN_PASSWORD)
+
+export const admin = new Hono<{ Variables: Store }>()
 
 admin
 	.get("/login", (c) => {
-		console.log(c.req.query("error"))
-
 		return c.render(
 			<main>
 				<form
@@ -24,6 +24,11 @@ admin
 				>
 					{c.req.query("error") !== undefined && (
 						<div class="text-red">Wrong password</div>
+					)}
+					{c.req.query("redirected") !== undefined && (
+						<div class="text-red">
+							You need to log in to access this page
+						</div>
 					)}
 					<input type="password" name="password" placeholder="Password" />
 					<button type="submit">Login</button>
@@ -41,107 +46,150 @@ admin
 		async (c) => {
 			const body = await c.req.parseBody()
 
+			console.log("body.password", body.password)
+			console.log("ADMIN_PASSWORD_IN_MW", env.ADMIN_PASSWORD)
+
 			if (body.password !== env.ADMIN_PASSWORD) {
-				return c.redirect("/login?error")
+				c.header("HX-Redirect", "?error")
+				c.status(403)
+				return c.text("Wrong password")
 			}
 
-			//TODO finish login
+			const token = await sign("", JWT_KEY)
 
-			const token = await sign({}, JWT_KEY)
-			setCookie(c, "admintoken", token, { httpOnly: true })
+			setCookie(c, "admintoken", token, {
+				httpOnly: true,
+				sameSite: "Strict",
+				//secure: true,
+				maxAge: 24 * 3600
+			})
 
-			return c.redirect("/admin")
+			c.header("HX-Redirect", "/admin")
+			return c.text("Logged in, redirecting...")
 		}
 	)
 
 admin.get("/logout", (c) => {
 	deleteCookie(c, "admintoken")
-	return c.redirect("/login")
+	c.header("HX-Redirect", "login")
+	return c.text("Logged out")
 })
 
-admin.use(
-	"*",
-	jwt({
-		cookie: "admintoken",
-		secret: JWT_KEY
-	})
-)
+admin.use("*", async (c, next) => {
+	const cookie = getCookie(c, "admintoken") ?? ""
+
+	console.log("cookie", cookie)
+
+	const token = await verify(cookie, JWT_KEY).catch(() => "error")
+
+	console.log("admin token", token)
+
+	if (token === "error") {
+		return c.redirect("/admin/login?redirected")
+	}
+
+	await next()
+})
 
 admin.get("/", (c) => {
 	return c.render(
 		<div>
 			Admin page
-			<button hx-post="pushsse" hx-swap="none">
+			<button hx-get="/admin/nextspeaker" hx-swap="none">
 				Push data to stream
 			</button>
 		</div>
 	)
 })
 
-admin.post("/pushsse", async (c) => {
-	// Here is one implementation
-	// if (!speakersListStream) {
-	// 	if (c.req.query("afterinit") === "true") {
-	// 		c.status(503)
-	// 		return c.text("Stream failed to initialize")
-	// 	}
-
-	// 	const baseUrl = c.req.url.replace(c.req.path, "")
-	// 	fetch(baseUrl + "/speakers/listsse?afterinit=true")
-	// 	await fetch(baseUrl + "/admin/pushsse")
-	// 	return c.text("Initialized stream and pushed data")
-	// }
-
-	// If the stream doesn't exist, it means no one has connected to it yet
-	// No need to send out any data to the stream in that case
-	if (!speakersListStream) {
-		c.status(503)
-		return c.text("No clients listening to the stream")
-	}
-
-	speakersListStream.writeSSE({
-		data: "Hello from admin"
-	})
-
-	return c.text("Pushed data to stream")
-})
-
 admin.get("/nextspeaker", async (c) => {
-	const currentSpeaker = await db.query.speakerslistAttendees.findFirst({
-		where: and(
-			eq(schema.speakerslistAttendees.speakerslistId, "IDspeakerslist"),
-			isNull(schema.speakerslistAttendees.leftAt)
-		),
-		orderBy: [asc(schema.speakerslistAttendees.joinedAt)]
-	})
+	const speakerslistId = c.get("activeSpeakerslistId")
 
-	if (!currentSpeaker) {
-		return c.text("Speakers list is empty")
-	}
-
-	db.update(schema.speakerslistAttendees)
+	// Finish current speaker
+	await db
+		.update(schema.speakerslistAttendees)
 		.set({
-			leftAt: new Date()
+			finishedSpeakingAt: new Date(),
+			leftAt: new Date(),
+			isCurrentlySpeaking: false
 		})
 		.where(
 			and(
-				eq(schema.speakerslistAttendees.speakerslistId, "IDspeakerslist"),
-				eq(
-					schema.speakerslistAttendees.attendeeId,
-					currentSpeaker.attendeeId
-				),
-				isNull(schema.speakerslistAttendees.leftAt)
+				eq(schema.speakerslistAttendees.speakerslistId, speakerslistId),
+				eq(schema.speakerslistAttendees.isCurrentlySpeaking, true)
 			)
 		)
 
-	if (!speakersListStream) {
-		c.status(503)
-		return c.text("No clients listening to the stream")
+	// Get current queues
+	const speakers = await db.query.speakerslistAttendees.findMany({
+		where: eq(schema.speakerslistAttendees.speakerslistId, speakerslistId),
+		orderBy: [asc(schema.speakerslistAttendees.joinedAt)]
+	})
+
+	const pendingSpeakers = speakers.filter(
+		(speaker) => !speaker.leftAt && !speaker.isCurrentlySpeaking
+	)
+
+	let returningSpeakers: typeof pendingSpeakers = []
+	let firstTimeSpeakers: typeof pendingSpeakers = []
+
+	pendingSpeakers.forEach((speaker) => {
+		if (
+			speakers.find(
+				(s) => s.attendeeId === speaker.attendeeId && s.finishedSpeakingAt
+			)
+		) {
+			returningSpeakers.push(speaker)
+		} else {
+			firstTimeSpeakers.push(speaker)
+		}
+	})
+
+	// Depending on queues
+	if (firstTimeSpeakers.length !== 0) {
+		await db
+			.update(schema.speakerslistAttendees)
+			.set({
+				isCurrentlySpeaking: true,
+				startedSpeakingAt: new Date()
+			})
+			.where(
+				and(
+					eq(schema.speakerslistAttendees.speakerslistId, speakerslistId),
+					eq(
+						schema.speakerslistAttendees.attendeeId,
+						firstTimeSpeakers[0].attendeeId
+					),
+					isNull(schema.speakerslistAttendees.leftAt)
+				)
+			)
+	} else {
+		if (returningSpeakers.length !== 0) {
+			await db
+				.update(schema.speakerslistAttendees)
+				.set({
+					isCurrentlySpeaking: true,
+					startedSpeakingAt: new Date()
+				})
+				.where(
+					and(
+						eq(
+							schema.speakerslistAttendees.speakerslistId,
+							speakerslistId
+						),
+						eq(
+							schema.speakerslistAttendees.attendeeId,
+							returningSpeakers[0].attendeeId
+						),
+						isNull(schema.speakerslistAttendees.leftAt)
+					)
+				)
+		} else {
+			// No speakers in queue
+		}
 	}
 
-	speakersListStream.writeSSE({
-		data: "Hello from admin"
-	})
+	updateSpeakersListStream("Advancing to next speaker from admin")
 
 	return c.text("Pushed data to stream")
 })

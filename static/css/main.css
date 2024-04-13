@@ -1,9 +1,26 @@
 @font-face {
+	font-family: "Bitter";
+	src: url("/Bitter.ttf");
+}
+
+@font-face {
 	font-family: "Delta";
-	src: url("/Delta.ttf") format("truetype");
+	src: url("/Delta.ttf");
 }
 
 button {
 	/* prettier-ignore */
-	@apply "bg-sky-800 hover:bg-sky-700 active:bg-sky-600 rounded-full px-4 py-2 text-sky-50 transition-colors"
+	@apply "bg-sky-900 hover:bg-sky-800 focus:bg-sky-800 active:bg-sky-700 text-[1.2rem] rounded-full px-6 py-2 text-sky-50 transition-colors"
 }
+
+input {
+	/* prettier-ignore */
+	@apply "text-center b b-solid b-slate-300 rounded-full py-2"
+}
+
+*:focus {
+	/* prettier-ignore */
+	@apply "outline outline-orange-600"
+}
+
+/* @apply "outline outline-slate-900 dark:outline-slate-100" */

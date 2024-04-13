@@ -2,18 +2,18 @@ import { FC } from "hono/jsx"
 
 const links = [
 	{ title: "Agenda", href: "/agenda" },
-	{ title: "Speaker's list", href: "/speakers" },
+	{ title: "Speakers", href: "/speakers" },
 	{ title: "Voting", href: "/voting" }
 ] as const
 
 export const Header: FC<{ urlPath: string }> = (props) => {
 	return (
-		<header class="flex items-center justify-between bg-sky-800 text-slate-50">
+		<header class="flex items-center justify-between bg-sky-900 text-slate-50 dark:bg-slate-300 dark:text-slate-800">
 			<logo class="font-logo px-4 py-3 text-[38px]">SM</logo>
 			<button
 				type="button"
 				class="flex h-full items-center gap-2 rounded-none text-[18px] font-light drop-shadow-none"
-				x-on:click="navOpen = !navOpen; console.log(navOpen)"
+				x-on:click="navOpen = !navOpen"
 			>
 				<div class="i-heroicons-bars-3 text-[2rem]"></div>
 				<div>{getTitleFromPath(props.urlPath)}</div>
@@ -27,12 +27,12 @@ const getTitleFromPath = (path: string) => {
 	return title ?? "Unknown"
 }
 
-export const HeaderList: FC = (props) => {
+export const HeaderList: FC<{ name: string }> = (props) => {
 	return (
 		<ul class="w-50 absolute right-0 -z-10 h-full bg-sky-900 text-slate-50">
 			<div class="p-4">
 				<span>In meeting as </span>
-				<span>$name</span>
+				<span>{props.name}</span>
 			</div>
 			{links.map((link) => (
 				<li class="cursor-pointer transition-colors hover:bg-sky-800 active:bg-sky-700">
