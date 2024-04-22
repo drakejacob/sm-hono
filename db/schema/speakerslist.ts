@@ -1,6 +1,7 @@
+import { attendees } from "./attendee"
+import { agendaNodes } from "./meeting"
 import { sql, relations } from "drizzle-orm"
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
-import { attendees } from "./attendee"
 
 export const speakerslist = sqliteTable("speakerslist", {
 	id: text("id")

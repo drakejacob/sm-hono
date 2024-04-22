@@ -1,6 +1,6 @@
-import { db, schema } from "."
+import { db, schema } from "$db"
 
-export async function seedDatabase() {
+export async function seedSpeakers() {
 	await db.delete(schema.attendees)
 
 	await db.insert(schema.attendees).values({

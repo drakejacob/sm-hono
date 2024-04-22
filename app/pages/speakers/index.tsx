@@ -1,11 +1,9 @@
 import { Store } from "$app"
-import { Header, HeaderList } from "$app/components/Header"
 import { MainLayout } from "$app/layouts/Main"
 import { db, schema } from "$db"
 import { Speakers, SpeakersList, SpeakersListButton } from "./SpeakersList"
 import { eq, asc, and, isNull } from "drizzle-orm"
-import { Context, Hono } from "hono"
-import { jsxRenderer, useRequestContext } from "hono/jsx-renderer"
+import { Hono } from "hono"
 import { SSEStreamingApi, streamSSE } from "hono/streaming"
 
 export const speakers = new Hono<{ Variables: Store }>()
@@ -37,6 +35,8 @@ speakers.get("/sse", async (c) => {
 		)
 
 		stream.onAbort(() => {
+			// this does not seem to do anything. The stream is not removed from the array.
+			// Could lead to pushing to too many streams
 			const index = speakersListStreams.indexOf(stream)
 			if (index !== -1) {
 				speakersListStreams.splice(index, 1)
@@ -64,6 +64,8 @@ speakers.get("/", MainLayout, (c) => {
 
 speakers.post("/", async (c) => {
 	const speakerslistId = c.get("activeSpeakerslistId")
+	if (!speakerslistId) return c.text("No active speakers list")
+
 	const attendeeId = c.get("attendeeId")
 
 	const isInSpeakerslist = await db.query.speakerslistAttendees.findFirst({
@@ -90,6 +92,8 @@ speakers.post("/", async (c) => {
 
 speakers.delete("/", async (c) => {
 	const speakerslistId = c.get("activeSpeakerslistId")
+	if (!speakerslistId) return c.text("No active speakers list")
+
 	const attendeeId = c.get("attendeeId")
 
 	// if currently speaking, set finishedSpeakingAt and leftAt

@@ -1,13 +1,14 @@
-import { Hono } from "hono"
-import { setCookie, deleteCookie, getCookie } from "hono/cookie"
+import { db, schema } from "$db"
 import { JWT_KEY, Store } from "../.."
 import { updateSpeakersListStream } from "../speakers"
-import { db, schema } from "$db"
-import { and, asc, eq, isNull } from "drizzle-orm"
-import { env } from "bun"
+import { adminMeetings } from "./meetings"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
+import { env } from "bun"
+import { and, asc, eq, isNull } from "drizzle-orm"
+import { Hono } from "hono"
+import { setCookie, deleteCookie, getCookie } from "hono/cookie"
 import { sign, verify } from "hono/jwt"
+import { z } from "zod"
 
 console.log("ADMIN_PASSWORD", env.ADMIN_PASSWORD)
 
@@ -19,7 +20,7 @@ admin
 			<main>
 				<form
 					class="grid place-items-center gap-4 pt-8"
-					hx-post="login"
+					hx-post={"/admin/login" + c.req.query("redirected")}
 					hx-swap="none"
 				>
 					{c.req.query("error") !== undefined && (
@@ -84,26 +85,38 @@ admin.use("*", async (c, next) => {
 
 	console.log("admin token", token)
 
+	const path = c.req.path
+
 	if (token === "error") {
-		return c.redirect("/admin/login?redirected")
+		return c.redirect("/admin/login?redirected=" + path)
 	}
 
 	await next()
 })
 
+admin.route("/meetings", adminMeetings)
+
 admin.get("/", (c) => {
 	return c.render(
-		<div>
+		<div class="flex flex-col">
 			Admin page
-			<button hx-get="/admin/nextspeaker" hx-swap="none">
-				Push data to stream
-			</button>
+			<div>
+				<button hx-get="/admin/nextspeaker" hx-swap="none">
+					Next speaker
+				</button>
+			</div>
+			<div>
+				<a class="underline" href="/admin/meetings">
+					Manage meetings
+				</a>
+			</div>
 		</div>
 	)
 })
 
 admin.get("/nextspeaker", async (c) => {
 	const speakerslistId = c.get("activeSpeakerslistId")
+	if (!speakerslistId) return c.text("No active speakers list")
 
 	// Finish current speaker
 	await db

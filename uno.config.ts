@@ -25,6 +25,9 @@ export default defineConfig({
 		// 	}
 		// })
 	],
+	shortcuts: {
+		error: "w-full p-2 italic text-rose-600"
+	},
 	theme: {
 		fontFamily: {
 			logo: ["Delta", "display"],

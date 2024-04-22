@@ -37,6 +37,8 @@ export const agendaNodes = sqliteTable("agendaNode", {
 		.references(() => meetings.id)
 })
 
+export type AgendaNode = typeof agendaNodes.$inferSelect
+
 export const agendaNodeRelations = relations(agendaNodes, ({ one, many }) => ({
 	agendaNodes: many(agendaNodes),
 	meeting: one(meetings, {

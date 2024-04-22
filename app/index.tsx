@@ -3,7 +3,9 @@ import { admin } from "$app/pages/admin"
 import { agenda } from "$app/pages/agenda"
 import { join } from "$app/pages/join"
 import { speakers } from "$app/pages/speakers"
+import { theme } from "$app/pages/theme"
 import { db, schema } from "$db"
+import { env } from "bun"
 import { randomBytes } from "crypto"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
@@ -26,13 +28,17 @@ export function getDisplayName(attendee?: {
 export type Store = {
 	attendeeId: string
 	displayName: string
-	activeSpeakerslistId: string
+	activeMeetingId: string | null
+	activeSpeakerslistId: string | null
 }
 
 const app = new Hono<{ Variables: Store }>()
 
 app.use("*", async (c, next) => {
 	c.set("activeSpeakerslistId", "IDspeakerslist")
+
+	const activeMeetingId = await getActiveMeetingId()
+	c.set("activeMeetingId", activeMeetingId)
 
 	const token = getCookie(c, "attendeetoken")
 	if (!token) {
@@ -62,10 +68,11 @@ app.use(
 	})
 )
 
-app.route("/speakers", agenda)
-app.route("/speakers", speakers)
 app.route("/admin", admin)
+app.route("/agenda", agenda)
 app.route("/join", join)
+app.route("/speakers", speakers)
+app.route("/theme", theme)
 
 app.get("/", (c) => {
 	const meeting = {
@@ -146,3 +153,14 @@ app.all("*", (c) => {
 })
 
 export default app
+
+async function getActiveMeetingId() {
+	const meetings = await db.query.meetings.findMany()
+	if (meetings.length === 0) {
+		//return new Error("No meetings found")
+		return null
+	}
+	meetings.filter((meeting) => meeting.endDate === null)
+	meetings.sort((a, b) => (a.startDate >= b.startDate ? 1 : -1))
+	return meetings[0].id
+}
