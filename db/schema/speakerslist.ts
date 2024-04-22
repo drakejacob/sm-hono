@@ -1,7 +1,7 @@
 import { attendees } from "./attendee"
 import { agendaNodes } from "./meeting"
 import { sql, relations } from "drizzle-orm"
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core"
 
 export const speakerslist = sqliteTable("speakerslist", {
 	id: text("id")
@@ -30,7 +30,11 @@ export const speakerslistAttendees = sqliteTable("speakerslistAttendees", {
 	isCurrentlySpeaking: integer("isCurrentlySpeaking", { mode: "boolean" })
 		.notNull()
 		.default(false)
-})
+	},
+	(t) => ({
+		pk: primaryKey({ columns: [t.speakerslistId, t.attendeeId, t.joinedAt] }),
+	}),
+)
 
 export const speakerslistAttendeesRelations = relations(
 	speakerslistAttendees,

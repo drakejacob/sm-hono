@@ -5,6 +5,7 @@ import {
 	integer,
 	AnySQLiteColumn
 } from "drizzle-orm/sqlite-core"
+import { attendees } from "./attendee"
 
 export const meetings = sqliteTable("meetings", {
 	id: text("id")
@@ -17,6 +18,7 @@ export const meetings = sqliteTable("meetings", {
 })
 
 export const meetingRelations = relations(meetings, ({ many }) => ({
+	attendees: many(attendees),
 	agendaNodes: many(agendaNodes)
 }))
 

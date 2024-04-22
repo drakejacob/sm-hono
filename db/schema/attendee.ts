@@ -1,5 +1,6 @@
-import { sql } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { meetings } from "./meeting"
 
 export const attendees = sqliteTable("attendees", {
 	id: text("id")
@@ -18,5 +19,16 @@ export const attendees = sqliteTable("attendees", {
 	joinedAt: integer("joinedAt", { mode: "timestamp" })
 		.notNull()
 		.default(sql`(unixepoch())`),
-	leftAt: integer("leftAt", { mode: "timestamp" })
+	leftAt: integer("leftAt", { mode: "timestamp" }),
+	isReadyToMoveOn: integer("isReadyToMoveOn", { mode: "boolean" })
+		.notNull()
+		.default(false),
+	meetingId: text("meetingId").notNull().references(() => meetings.id)
 })
+
+export const attendeeRelations = relations(attendees, ({ one }) => ({
+	meeting: one(meetings, {
+		fields: [attendees.meetingId],
+		references: [meetings.id]
+	})
+}))

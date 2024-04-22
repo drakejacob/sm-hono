@@ -30,7 +30,7 @@ speakers.get("/sse", async (c) => {
 	return streamSSE(c, async (stream) => {
 		speakersListStreams.push(stream)
 		console.log(
-			"stream added, number of current streams: ",
+			"stream added for speakerslist, number of current streams: ",
 			speakersListStreams.length
 		)
 

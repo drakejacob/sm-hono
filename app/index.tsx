@@ -6,6 +6,7 @@ import { speakers } from "$app/pages/speakers"
 import { theme } from "$app/pages/theme"
 import { db, schema } from "$db"
 import { env } from "bun"
+import { ready } from "$app/pages/ready"
 import { randomBytes } from "crypto"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
@@ -37,7 +38,7 @@ const app = new Hono<{ Variables: Store }>()
 app.use("*", async (c, next) => {
 	c.set("activeSpeakerslistId", "IDspeakerslist")
 
-	const activeMeetingId = await getActiveMeetingId()
+	const activeMeetingId = (await getActiveMeeting())?.id ?? null
 	c.set("activeMeetingId", activeMeetingId)
 
 	const token = getCookie(c, "attendeetoken")
@@ -71,6 +72,7 @@ app.use(
 app.route("/admin", admin)
 app.route("/agenda", agenda)
 app.route("/join", join)
+app.route("/ready", ready)
 app.route("/speakers", speakers)
 app.route("/theme", theme)
 
@@ -154,7 +156,7 @@ app.all("*", (c) => {
 
 export default app
 
-async function getActiveMeetingId() {
+export async function getActiveMeeting() {
 	const meetings = await db.query.meetings.findMany()
 	if (meetings.length === 0) {
 		//return new Error("No meetings found")
@@ -162,5 +164,5 @@ async function getActiveMeetingId() {
 	}
 	meetings.filter((meeting) => meeting.endDate === null)
 	meetings.sort((a, b) => (a.startDate >= b.startDate ? 1 : -1))
-	return meetings[0].id
+	return meetings[0]
 }

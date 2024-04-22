@@ -1,10 +1,14 @@
 import { db, schema } from "$db"
 import { agendaNodes } from "$db/schema/meeting"
 
+export const MEETING_ID = "meetingid"
+export const ATTENDEE1_ID = "attendee1id"
+export const ATTENDEE2_ID = "attendee2id"
+export const ATTENDEE3_ID = "attendee3id"
+
 export async function seedMeeting() {
 	await db.delete(schema.meetings)
 
-	const MEETING_ID = "meetingid"
 	await db.insert(schema.meetings).values({
 		id: MEETING_ID,
 		location: "Tunavägen",

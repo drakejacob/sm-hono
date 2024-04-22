@@ -19,7 +19,14 @@ export const SpeakersList: FC<{ c: Context<{ Variables: Store }> }> = async ({
 	c
 }) => {
 	const speakerslistId = c.get("activeSpeakerslistId")
+	if (!speakerslistId) {
+		return <div class="error">No speakerslist active</div>
+	}
+
 	const attendeeId = c.get("attendeeId")
+	if (!attendeeId) {
+		return <div class="error">User (you) wasn't loaded correctly</div>
+	}
 
 	const speakerslist = await db.query.speakerslist.findFirst({
 		where: eq(schema.speakerslist.id, speakerslistId)
@@ -104,8 +111,15 @@ export const SpeakersList: FC<{ c: Context<{ Variables: Store }> }> = async ({
 export const SpeakersListButton: FC<{
 	c: Context<{ Variables: Store }>
 }> = async ({ c }) => {
-	const attendeeId = c.get("attendeeId")
 	const activeSpeakerslistId = c.get("activeSpeakerslistId")
+	if (!activeSpeakerslistId) {
+		return <div class="error">No speakerslist active</div>
+	}
+
+	const attendeeId = c.get("attendeeId")
+	if (!attendeeId) {
+		return <div class="error">User (you) wasn't loaded correctly</div>
+	}
 
 	const imOnTheList = await db.query.speakerslistAttendees.findFirst({
 		where: and(

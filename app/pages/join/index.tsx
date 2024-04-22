@@ -157,6 +157,12 @@ join.post(
 	async (c) => {
 		const data = c.req.valid("form")
 
+		const activeMeetingId = c.get("activeMeetingId")
+		if (!activeMeetingId) {
+			c.status(500)
+			return c.text("No active meeting")
+		}
+
 		const { attendeeId } = await db
 			.insert(schema.attendees)
 			.values({
@@ -165,7 +171,8 @@ join.post(
 				lastName: data.lastName,
 				yearAdmitted: data.yearAdmitted,
 				isMember: !!data.isMember,
-				attendedOnlyMaster: !!data.attendedOnlyMaster
+				attendedOnlyMaster: !!data.attendedOnlyMaster,
+				meetingId: activeMeetingId
 			})
 			.returning({ attendeeId: schema.attendees.id })
 			.get()

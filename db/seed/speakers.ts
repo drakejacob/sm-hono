@@ -1,27 +1,34 @@
 import { db, schema } from "$db"
+import { ATTENDEE1_ID, ATTENDEE2_ID, ATTENDEE3_ID, MEETING_ID } from "./meeting"
 
 export async function seedSpeakers() {
 	await db.delete(schema.attendees)
 
 	await db.insert(schema.attendees).values({
-		id: "IDgaba",
+		id: ATTENDEE1_ID,
 		firstName: "Gaba",
 		nickName: "Gaba",
-		lastName: "Gaba"
+		lastName: "Gaba",
+		isReadyToMoveOn: true,
+		meetingId: MEETING_ID,
 	})
 
 	await db.insert(schema.attendees).values({
-		id: "IDjanne",
+		id: ATTENDEE2_ID,
 		firstName: "Janne",
 		nickName: "Janne",
-		lastName: "Janne"
+		lastName: "Janne",
+		isReadyToMoveOn: true,
+		meetingId: MEETING_ID,
 	})
 
 	await db.insert(schema.attendees).values({
-		id: "IDgreta",
+		id: ATTENDEE3_ID,
 		firstName: "Greta",
 		nickName: "Greta",
-		lastName: "Greta"
+		lastName: "Greta",
+		isReadyToMoveOn: false,
+		meetingId: MEETING_ID,
 	})
 
 	await db.delete(schema.speakerslist)

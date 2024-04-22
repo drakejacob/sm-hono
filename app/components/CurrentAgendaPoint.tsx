@@ -66,7 +66,9 @@ export const CurrentAgendaPoint: FC<{
 			<span class="text-2xl">{currentAgendaPoint.name}</span>
 
 			<div class="absolute right-2 text-2xl font-bold">
-				<TimeCounter></TimeCounter>
+				<TimeCounter
+					startDate={currentAgendaPoint.startedAt ?? undefined}
+				></TimeCounter>
 			</div>
 		</div>
 	)

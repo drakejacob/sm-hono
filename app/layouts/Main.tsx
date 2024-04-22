@@ -1,5 +1,6 @@
 import { CurrentAgendaPoint } from "$app/components/CurrentAgendaPoint"
 import { Header, HeaderList } from "$app/components/Header"
+import { ReadyCounter } from "$app/components/ReadyCounter"
 import { jsxRenderer, useRequestContext } from "hono/jsx-renderer"
 
 export const MainLayout = jsxRenderer(({ children, Layout }) => {
@@ -16,6 +17,7 @@ export const MainLayout = jsxRenderer(({ children, Layout }) => {
 			>
 				<Header urlPath={c.req.path}></Header>
 				<CurrentAgendaPoint c={c}></CurrentAgendaPoint>
+				<ReadyCounter c={c}></ReadyCounter>
 				<main class="flex flex-1 flex-col items-center bg-slate-50 p-6 dark:bg-slate-950">
 					{children}
 				</main>
